@@ -65,13 +65,43 @@ public class Projet {
 
     // le delete
     public static void delete(int id) {
-        String query = "DELETE FROM Projets WHERE id = ?";
-        try (Connection conn = Database.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, id);
-            stmt.executeUpdate();
-            System.out.println("Projet supprimé avec succès !");
+        String deleteRelationsQuery = "DELETE FROM Employes_Projets WHERE projet_id = ?";
+        String deleteProjectQuery = "DELETE FROM Projets WHERE id = ?";
+
+        try (Connection conn = Database.getConnection()) {
+            // Supprimer les relations dans la table intermédiaire
+            try (PreparedStatement stmtRelations = conn.prepareStatement(deleteRelationsQuery)) {
+                stmtRelations.setInt(1, id);
+                stmtRelations.executeUpdate();
+                System.out.println("Relations du projet supprimées avec succès.");
+            }
+
+            // Supprimer le projet lui-même
+            try (PreparedStatement stmtProject = conn.prepareStatement(deleteProjectQuery)) {
+                stmtProject.setInt(1, id);
+                stmtProject.executeUpdate();
+                System.out.println("Projet supprimé avec succès !");
+            }
+
         } catch (SQLException e) {
             System.err.println("Erreur lors de la suppression du projet : " + e.getMessage());
         }
     }
+
+    public static void assignEmployeToProjet(int projetId, int employeId) {
+        String query = "INSERT INTO Employes_Projets (employe_id, projet_id) VALUES (?, ?)";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, employeId);
+            stmt.setInt(2, projetId);
+            stmt.executeUpdate();
+            System.out.println("Employé ID " + employeId + " assigné au projet ID " + projetId);
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de l'assignation de l'employé au projet : " + e.getMessage());
+        }
+    }
+
+
+
+
 }
